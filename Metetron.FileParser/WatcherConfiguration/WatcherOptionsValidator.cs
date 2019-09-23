@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace Metetron.FileParser.WatcherConfiguration
 {
-    public class WatcherOptionsValidator : AbstractValidator<WatcherOptions>
+    internal class WatcherOptionsValidator : AbstractValidator<WatcherOptions>
     {
         public WatcherOptionsValidator()
         {
@@ -17,7 +17,7 @@ namespace Metetron.FileParser.WatcherConfiguration
             RuleFor(o => o.FileSearchPattern)
                 .NotEmpty();
 
-            .RuleFor(o => o.PollingInterval)
+            RuleFor(o => o.PollingInterval)
                 .GreaterThanOrEqualTo(5000)
                 .WithMessage("Minimal polling interval is 5 seconds.");
 
