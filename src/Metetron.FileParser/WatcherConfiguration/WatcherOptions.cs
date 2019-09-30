@@ -13,6 +13,7 @@ namespace Metetron.FileParser.WatcherConfiguration
         public int PollingInterval { get; set; }
         public string WorkingDirectoryPath { get; set; }
         public string BackupDirectoryPath { get; set; }
+        public bool CheckMainDirectory { get; set; }
 
         public IList<string> ErrorMessages { get; set; }
 

@@ -26,6 +26,10 @@ namespace Metetron.FileParser.WatcherConfiguration
 
             RuleFor(o => o.BackupDirectoryPath)
                 .NotEmpty();
+
+            RuleFor(o => o.CheckMainDirectory)
+                .Empty()
+                .When(o => string.IsNullOrWhiteSpace(o.SubDirectorySearchPattern));
         }
     }
 }
