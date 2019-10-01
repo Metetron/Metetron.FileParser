@@ -132,7 +132,7 @@ namespace Metetron.FileParser.FileCreatedWatcher
                 var backupJobId = BackgroundJob.ContinueJobWith(parserJobId, () => CopyTask.CopyFileToDirectory(workingPath, backupPath));
                 var cleanupJobId = BackgroundJob.ContinueJobWith(backupJobId, () => CleanupTask.DeleteFile(workingPath));
 
-                if (_options.DeletesourceFileAfterParsing)
+                if (_options.DeleteSourceFileAfterParsing)
                     BackgroundJob.ContinueJobWith(cleanupJobId, () => CleanupTask.DeleteFile(file.FullName));
             }
         }
