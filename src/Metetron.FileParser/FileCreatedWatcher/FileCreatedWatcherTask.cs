@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Hangfire;
 using Metetron.FileParser.Abstractions;
+using Metetron.FileParser.FileTasks;
 using Metetron.FileParser.WatcherConfiguration;
 using Microsoft.Extensions.Logging;
 
@@ -126,7 +127,13 @@ namespace Metetron.FileParser.FileCreatedWatcher
                 var workingPath = $"{_options.WorkingDirectoryPath}\\{Guid.NewGuid()}\\{file.Name}";
                 var backupPath = $"{_options.BackupDirectoryPath}\\{DateTime.Today:yyyy}\\{DateTime.Today:MMMM}";
 
-                BackgroundJob.Enqueue(() => new T().ParseFile(workingPath));
+                var copyJobId = BackgroundJob.Enqueue(() => CopyTask.CopyFileToDirectory(file.FullName, _options.WorkingDirectoryPath));
+                var parserJobId = BackgroundJob.ContinueJobWith(copyJobId, () => new T().ParseFile(workingPath));
+                var backupJobId = BackgroundJob.ContinueJobWith(parserJobId, () => CopyTask.CopyFileToDirectory(workingPath, backupPath));
+                var cleanupJobId = BackgroundJob.ContinueJobWith(backupJobId, () => CleanupTask.DeleteFile(workingPath));
+
+                if (_options.DeletesourceFileAfterParsing)
+                    BackgroundJob.ContinueJobWith(cleanupJobId, () => CleanupTask.DeleteFile(file.FullName));
             }
         }
 
