@@ -37,9 +37,10 @@ namespace Metetron.FileParser.FileCreatedWatcher
         /// <returns>A list of new files, that have not been parsed yet</returns>
         private async Task<IEnumerable<FileInfo>> CheckForNewFiles()
         {
-            _logger.LogDebug("{ParserName}: Checking whether there are new files...", _options.ParserName);
+            _logger.LogInformation("{ParserName}: Checking whether there are new files or not...", _options.ParserName);
 
             var parserData = await GetWatcherDataAsync();
+            _logger.LogDebug("{ParserName}: Got parser data from database...", _options.ParserName);
 
             return GetNewFiles(parserData.LastFileCreationInTicks);
         }
@@ -111,16 +112,20 @@ namespace Metetron.FileParser.FileCreatedWatcher
         /// <returns>A list of new files, that were found in the directory</returns>
         private IEnumerable<FileInfo> GetFilesFromDirectory(DirectoryInfo directory, long lastFileCreationInTicks)
         {
+            _logger.LogDebug("{ParserName}: Checking directory \"{Directory}\" for new files...", _options.ParserName, directory.FullName);
             var allFiles = directory.GetFiles();
 
-            return allFiles.Where(f => _filePattern.IsMatch(f.Name) && f.CreationTimeUtc.Ticks > lastFileCreationInTicks);
+            var newFiles = allFiles.Where(f => _filePattern.IsMatch(f.Name) && f.CreationTimeUtc.Ticks > lastFileCreationInTicks);
+            _logger.LogDebug("{ParserName}: Found {NewFilesCount} in directory \"{Directory}\"", _options.ParserName, newFiles.Count(), directory.FullName);
+
+            return newFiles;
         }
 
         /// <summary>
         /// Enqueue jobs for each file in HangFire
         /// </summary>
         /// <param name="files">The files to enqueue</param>
-        private void EnqueueFiles(IEnumerable<FileInfo> files)
+        private void EnqueueFiles(IList<FileInfo> files)
         {
             foreach (var file in files)
             {
@@ -135,6 +140,8 @@ namespace Metetron.FileParser.FileCreatedWatcher
                 if (_options.DeleteSourceFileAfterParsing)
                     BackgroundJob.ContinueJobWith(cleanupJobId, () => CleanupTask.DeleteFile(file.FullName));
             }
+
+            _logger.LogDebug("{ParserName}: Enqueued {NewFilesCount} files for parsing...", _options.ParserName, files.Count);
         }
 
         /// <summary>
@@ -148,6 +155,7 @@ namespace Metetron.FileParser.FileCreatedWatcher
             if (parserData != null)
                 return parserData;
 
+            _logger.LogDebug("{ParserName}: Data not found in database. Create it from scratch...", _options.ParserName)
             parserData = new WatcherData { ParserName = _options.ParserName, LastFileCreationInTicks = DateTime.MinValue.Ticks };
 
             await _watcherRepository.InsertWatcherDataAsync(parserData);
