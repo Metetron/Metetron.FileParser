@@ -19,19 +19,19 @@ namespace Metetron.FileParser.FileCreatedWatcher
     {
         private readonly ILogger<FileCreatedWatcherTask<T>> _logger;
         private readonly IWatcherDataRepository _watcherRepository;
-        private readonly IFileSystem _fileSystem;
         private readonly WatcherOptions _options;
         private readonly IFileChecker _fileChecker;
         private readonly IMapper _mapper;
+        private readonly IFileWorker _fileWorker;
 
-        public FileCreatedWatcherTask(ILogger<FileCreatedWatcherTask<T>> logger, IWatcherDataRepository watcherRepository, IFileSystem fileSystem, WatcherOptions options, IFileChecker fileChecker, IMapper mapper)
+        public FileCreatedWatcherTask(ILogger<FileCreatedWatcherTask<T>> logger, IWatcherDataRepository watcherRepository, WatcherOptions options, IFileChecker fileChecker, IMapper mapper, IFileWorker fileWorker)
         {
             _logger = logger;
             _watcherRepository = watcherRepository;
-            _fileSystem = fileSystem;
             _options = options;
             _fileChecker = fileChecker;
-            this._mapper = mapper;
+            _mapper = mapper;
+            _fileWorker = fileWorker;
         }
 
         /// <summary>
@@ -47,32 +47,12 @@ namespace Metetron.FileParser.FileCreatedWatcher
 
             var checkOptions = _mapper.Map<FileCheckOptions>(_options);
             checkOptions.LastCreationTimeInTicks = parserData.LastFileCreationInTicks;
-            return _fileChecker.GetNewlyCreatedFiles(checkOptions);
-        }
+            var newFiles = _fileChecker.GetNewlyCreatedFiles(checkOptions);
 
+            parserData.LastFileCreationInTicks = newFiles.Max(f => f.CreationTimeUtc.Ticks);
+            await _watcherRepository.UpdateWatcherDataAsync(parserData);
 
-
-        /// <summary>
-        /// Enqueue jobs for each file in HangFire
-        /// </summary>
-        /// <param name="files">The files to enqueue</param>
-        private void EnqueueFiles(IList<IFileInfo> files)
-        {
-            foreach (var file in files)
-            {
-                var workingPath = $"{_options.WorkingDirectoryPath}\\{Guid.NewGuid()}\\{file.Name}";
-                var backupPath = $"{_options.BackupDirectoryPath}\\{DateTime.Today:yyyy}\\{DateTime.Today:MMMM}";
-
-                var copyJobId = BackgroundJob.Enqueue(() => CopyTask.CopyFileToDirectory(file.FullName, _options.WorkingDirectoryPath));
-                var parserJobId = BackgroundJob.ContinueJobWith(copyJobId, () => new T().ParseFile(workingPath));
-                var backupJobId = BackgroundJob.ContinueJobWith(parserJobId, () => CopyTask.CopyFileToDirectory(workingPath, backupPath));
-                var cleanupJobId = BackgroundJob.ContinueJobWith(backupJobId, () => CleanupTask.DeleteFile(workingPath));
-
-                if (_options.DeleteSourceFileAfterParsing)
-                    BackgroundJob.ContinueJobWith(cleanupJobId, () => CleanupTask.DeleteFile(file.FullName));
-            }
-
-            _logger.LogDebug("{ParserName}: Enqueued {NewFilesCount} files for parsing...", _options.ParserName, files.Count);
+            return newFiles;
         }
 
         /// <summary>
@@ -104,7 +84,11 @@ namespace Metetron.FileParser.FileCreatedWatcher
             {
                 try
                 {
-                    Task.Run(async () => await CheckForNewFiles(), cancellationToken);
+                    Task.Run(async () =>
+                    {
+                        var files = await CheckForNewFiles();
+                        _fileWorker.EnqueueNewFilesForProcessing<T>(_options, files.ToList());
+                    }, cancellationToken);
                 }
                 catch (Exception exception)
                 {
