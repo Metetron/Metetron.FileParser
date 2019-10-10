@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using Hangfire;
 using Metetron.FileParser.Abstractions;
 using Metetron.FileParser.FileTasks;
@@ -20,19 +21,17 @@ namespace Metetron.FileParser.FileCreatedWatcher
         private readonly IWatcherDataRepository _watcherRepository;
         private readonly IFileSystem _fileSystem;
         private readonly WatcherOptions _options;
+        private readonly IFileChecker _fileChecker;
+        private readonly IMapper _mapper;
 
-        private readonly Regex _filePattern;
-        private readonly Regex _subDirectoryPattern;
-
-        public FileCreatedWatcherTask(ILogger<FileCreatedWatcherTask<T>> logger, IWatcherDataRepository watcherRepository, IFileSystem fileSystem, WatcherOptions options)
+        public FileCreatedWatcherTask(ILogger<FileCreatedWatcherTask<T>> logger, IWatcherDataRepository watcherRepository, IFileSystem fileSystem, WatcherOptions options, IFileChecker fileChecker, IMapper mapper)
         {
             _logger = logger;
             _watcherRepository = watcherRepository;
             _fileSystem = fileSystem;
             _options = options;
-
-            _filePattern = new Regex(options.FileSearchPattern);
-            _subDirectoryPattern = new Regex(options.SubDirectorySearchPattern);
+            _fileChecker = fileChecker;
+            this._mapper = mapper;
         }
 
         /// <summary>
@@ -46,86 +45,12 @@ namespace Metetron.FileParser.FileCreatedWatcher
             var parserData = await GetWatcherDataAsync();
             _logger.LogDebug("{ParserName}: Got parser data from database...", _options.ParserName);
 
-            return GetNewFiles(parserData.LastFileCreationInTicks);
+            var checkOptions = _mapper.Map<FileCheckOptions>(_options);
+            checkOptions.LastCreationTimeInTicks = parserData.LastFileCreationInTicks;
+            return _fileChecker.GetNewlyCreatedFiles(checkOptions);
         }
 
-        /// <summary>
-        /// Get the new files from the directories that are watchec
-        /// </summary>
-        /// <param name="lastFileCreationInTicks">The UTC creation time of the last matching file in ticks</param>
-        /// <returns>A list of filesInfos, that have not been parsed yet.</returns>
-        private IEnumerable<IFileInfo> GetNewFiles(long lastFileCreationInTicks)
-        {
-            var newFiles = new List<IFileInfo>();
 
-            var dirInfo = _fileSystem.DirectoryInfo.FromDirectoryName(_options.DirectoryToWatch);
-
-            newFiles.AddRange(GetNewFilesFromSubdirectories(lastFileCreationInTicks));
-
-            newFiles.AddRange(GetNewFilesFromMainDirectory(lastFileCreationInTicks));
-
-            return newFiles;
-        }
-
-        /// <summary>
-        /// Gets the new files from the subdirectories that are watched
-        /// </summary>
-        /// <param name="lastFileCreationInTicks">The UTC creation time of the last matching file in ticks</param>
-        /// <returns>A list of new files that were found in the subdirectories</returns>
-        private IEnumerable<IFileInfo> GetNewFilesFromSubdirectories(long lastFileCreationInTicks)
-        {
-            if (string.IsNullOrWhiteSpace(_options.SubDirectorySearchPattern))
-                return Array.Empty<IFileInfo>();
-
-            var filePattern = new Regex(_options.FileSearchPattern);
-            var subDirectoryPattern = new Regex(_options.SubDirectorySearchPattern);
-            var subDirectories = _fileSystem.DirectoryInfo.FromDirectoryName(_options.DirectoryToWatch)
-                .GetDirectories()
-                .Where(sd => subDirectoryPattern.IsMatch(sd.Name));
-
-            var newFiles = new List<IFileInfo>();
-
-            foreach (var subDirectory in subDirectories)
-            {
-                var newFilesInSubdirectory = GetFilesFromDirectory(subDirectory, lastFileCreationInTicks);
-
-                newFiles.AddRange(newFilesInSubdirectory);
-            }
-
-            return newFiles;
-        }
-
-        /// <summary>
-        /// Gets the new files from the main directory that is watched
-        /// </summary>
-        /// <param name="lastFileCreationInTicks">The UTC creation time of the last matching file in ticks</param>
-        /// <returns>A list of new files that were found in the main directory</returns>
-        private IEnumerable<IFileInfo> GetNewFilesFromMainDirectory(long lastFileCreationInTicks)
-        {
-            if (!_options.CheckMainDirectory)
-                return Array.Empty<IFileInfo>();
-
-            var directory = _fileSystem.DirectoryInfo.FromDirectoryName(_options.DirectoryToWatch);
-
-            return GetFilesFromDirectory(directory, lastFileCreationInTicks);
-        }
-
-        /// <summary>
-        /// Gets the new files from a single directory
-        /// </summary>
-        /// <param name="directory">The directory that should be checked for new files</param>
-        /// <param name="lastFileCreationInTicks">The UTC creation time of the last matching file in ticks</param>
-        /// <returns>A list of new files, that were found in the directory</returns>
-        private IEnumerable<IFileInfo> GetFilesFromDirectory(IDirectoryInfo directory, long lastFileCreationInTicks)
-        {
-            _logger.LogDebug("{ParserName}: Checking directory \"{Directory}\" for new files...", _options.ParserName, directory.FullName);
-            var allFiles = directory.GetFiles();
-
-            var newFiles = allFiles.Where(f => _filePattern.IsMatch(f.Name) && f.CreationTimeUtc.Ticks > lastFileCreationInTicks);
-            _logger.LogDebug("{ParserName}: Found {NewFilesCount} in directory \"{Directory}\"", _options.ParserName, newFiles.Count(), directory.FullName);
-
-            return newFiles;
-        }
 
         /// <summary>
         /// Enqueue jobs for each file in HangFire
