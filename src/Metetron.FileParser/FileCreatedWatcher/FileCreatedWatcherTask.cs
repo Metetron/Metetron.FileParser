@@ -19,16 +19,15 @@ namespace Metetron.FileParser.FileCreatedWatcher
     {
         private readonly ILogger<FileCreatedWatcherTask<T>> _logger;
         private readonly IWatcherDataRepository _watcherRepository;
-        private readonly WatcherOptions _options;
+        private WatcherOptions _options;
         private readonly IFileChecker _fileChecker;
         private readonly IMapper _mapper;
         private readonly IFileWorker _fileWorker;
 
-        public FileCreatedWatcherTask(ILogger<FileCreatedWatcherTask<T>> logger, IWatcherDataRepository watcherRepository, WatcherOptions options, IFileChecker fileChecker, IMapper mapper, IFileWorker fileWorker)
+        public FileCreatedWatcherTask(ILogger<FileCreatedWatcherTask<T>> logger, IWatcherDataRepository watcherRepository, IFileChecker fileChecker, IMapper mapper, IFileWorker fileWorker)
         {
             _logger = logger;
             _watcherRepository = watcherRepository;
-            _options = options;
             _fileChecker = fileChecker;
             _mapper = mapper;
             _fileWorker = fileWorker;
@@ -49,8 +48,11 @@ namespace Metetron.FileParser.FileCreatedWatcher
             checkOptions.LastCreationTimeInTicks = parserData.LastFileCreationInTicks;
             var newFiles = _fileChecker.GetNewlyCreatedFiles(checkOptions);
 
-            parserData.LastFileCreationInTicks = newFiles.Max(f => f.CreationTimeUtc.Ticks);
-            await _watcherRepository.UpdateWatcherDataAsync(parserData);
+            if (newFiles.Any())
+            {
+                parserData.LastFileCreationInTicks = newFiles.Max(f => f.CreationTimeUtc.Ticks);
+                await _watcherRepository.UpdateWatcherDataAsync(parserData);
+            }
 
             return newFiles;
         }
@@ -80,30 +82,40 @@ namespace Metetron.FileParser.FileCreatedWatcher
         /// <param name="cancellationToken">Token to cancel the loop</param>
         private void ParserLoop(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            Task.Run(async () =>
             {
-                try
+                while (true)
                 {
-                    Task.Run(async () =>
+                    try
                     {
                         var files = await CheckForNewFiles();
-                        _fileWorker.EnqueueNewFilesForProcessing<T>(_options, files.ToList());
-                    }, cancellationToken);
+
+                        if (files.Any())
+                        {
+                            _fileWorker.EnqueueNewFilesForProcessing<T>(_options, files.ToList());
+                        }
+                        else
+                        {
+                            _logger.LogInformation("{ParserName}: Found no new files...", _options.ParserName);
+                        }
+
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogError(exception, "{ParserName}: Exception occurred while checking for new files", _options.ParserName);
+                    }
+                    await Task.Delay(_options.PollingInterval);
                 }
-                catch (Exception exception)
-                {
-                    _logger.LogError(exception, "{ParserName}: Exception occurred while checking for new files");
-                }
-                Task.Run(async () => await Task.Delay(_options.PollingInterval), cancellationToken);
-            }
+            }, cancellationToken);
         }
 
         /// <summary>
         /// Used for starting the parser thread
         /// </summary>
         /// <param name="cancellationToken">Token to cancel the operation</param>
-        private void Start(CancellationToken cancellationToken)
+        public void Start(WatcherOptions options, CancellationToken cancellationToken)
         {
+            _options = options;
             var task = new Task(() => ParserLoop(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning);
             task.Start();
         }

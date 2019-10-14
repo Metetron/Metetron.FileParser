@@ -82,7 +82,7 @@ namespace Metetron.FileParser.FileTasks
             var allFiles = directory.GetFiles();
 
             var newFiles = allFiles.Where(f => options.FileSearchPattern.IsMatch(f.Name) && f.CreationTimeUtc.Ticks > options.LastCreationTimeInTicks);
-            _logger.LogDebug("{ParserName}: Found {NewFilesCount} in directory \"{Directory}\"", options.ParserName, newFiles.Count(), directory.FullName);
+            _logger.LogDebug("{ParserName}: Found {NewFilesCount} files in directory \"{Directory}\"", options.ParserName, newFiles.Count(), directory.FullName);
 
             return newFiles;
         }

@@ -21,19 +21,20 @@ namespace Metetron.FileParser.FileTasks
         {
             foreach (var file in newFiles)
             {
-                var workingPath = $"{options.WorkingDirectoryPath}\\{Guid.NewGuid()}\\{file.Name}";
+                var workingPath = $"{options.WorkingDirectoryPath}\\{Guid.NewGuid()}";
+                var workingFile = $"{workingPath}\\{file.Name}";
                 var backupPath = $"{options.BackupDirectoryPath}\\{DateTime.Today:yyyy}\\{DateTime.Today:MMMM}";
 
-                var copyJobId = BackgroundJob.Enqueue(() => CopyTask.CopyFileToDirectory(file.FullName, options.WorkingDirectoryPath));
-                var parserJobId = BackgroundJob.ContinueJobWith(copyJobId, () => new T().ParseFile(workingPath));
-                var backupJobId = BackgroundJob.ContinueJobWith(parserJobId, () => CopyTask.CopyFileToDirectory(workingPath, backupPath));
-                var cleanupJobId = BackgroundJob.ContinueJobWith(backupJobId, () => CleanupTask.DeleteFile(workingPath));
+                var copyJobId = BackgroundJob.Enqueue(() => CopyTask.CopyFileToDirectory(file.FullName, workingPath));
+                var parserJobId = BackgroundJob.ContinueJobWith(copyJobId, () => new T().ParseFile(workingFile));
+                var backupJobId = BackgroundJob.ContinueJobWith(parserJobId, () => CopyTask.CopyFileToDirectory(workingFile, backupPath));
+                var cleanupJobId = BackgroundJob.ContinueJobWith(backupJobId, () => CleanupTask.DeleteFolder(workingPath));
 
                 if (options.DeleteSourceFileAfterParsing)
                     BackgroundJob.ContinueJobWith(cleanupJobId, () => CleanupTask.DeleteFile(file.FullName));
             }
 
-            _logger.LogDebug("{ParserName}: Enqueued {NewFilesCount} files for parsing...", options.ParserName, newFiles.Count);
+            _logger.LogInformation("{ParserName}: Enqueued {NewFilesCount} files for parsing...", options.ParserName, newFiles.Count);
         }
     }
 }
