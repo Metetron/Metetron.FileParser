@@ -4,6 +4,21 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IsPackable>True</IsPackable>
+    <PackageId>Parsnet</PackageId>
+    <Title>Parsnet</Title>
+    <Authors>Daniel Freydl</Authors>
+    <Owners>Daniel Freydl</Owners>
+    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageDescription>Library for creating file parsers</PackageDescription>
+    <Description>Library for creating file parsers</Description>
+    <Copyright>Copyright (c) Daniel Freydl and contributors 2019-2020</Copyright>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Metetron/Parsnet</RepositoryUrl>
+  <PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="FluentValidation" Version="8.4.0" />
