@@ -1,4 +1,4 @@
-namespace Metetron.FileParser.FileCreatedWatcher
+namespace Parsnet.FileCreatedWatcher
 {
     public class WatcherData
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Metetron.FileParser.WatcherConfiguration
+namespace Parsnet.WatcherConfiguration
 {
     public class WatcherOptions
     {

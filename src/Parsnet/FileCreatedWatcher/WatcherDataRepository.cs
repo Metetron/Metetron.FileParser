@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using LiteDB;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Metetron.FileParser.FileCreatedWatcher
+namespace Parsnet.FileCreatedWatcher
 {
     public class WatcherDataRepository : IWatcherDataRepository
     {

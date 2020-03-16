@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Metetron.FileParser.FileCreatedWatcher
+namespace Parsnet.FileCreatedWatcher
 {
     public interface IWatcherDataRepository
     {

@@ -8,13 +8,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Hangfire;
-using Metetron.FileParser.Abstractions;
-using Metetron.FileParser.FileTasks;
-using Metetron.FileParser.Options;
-using Metetron.FileParser.WatcherConfiguration;
+using Parsnet.Abstractions;
+using Parsnet.FileTasks;
+using Parsnet.Options;
+using Parsnet.WatcherConfiguration;
 using Microsoft.Extensions.Logging;
 
-namespace Metetron.FileParser.FileCreatedWatcher
+namespace Parsnet.FileCreatedWatcher
 {
     public class FileCreatedWatcherTask<T> where T : IParser, new()
     {

@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Metetron.FileParser.WatcherConfiguration
+namespace Parsnet.WatcherConfiguration
 {
     internal class WatcherOptionsValidator : AbstractValidator<WatcherOptions>
     {

@@ -4,12 +4,12 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Metetron.FileParser.Abstractions;
-using Metetron.FileParser.Options;
-using Metetron.FileParser.WatcherConfiguration;
+using Parsnet.Abstractions;
+using Parsnet.Options;
+using Parsnet.WatcherConfiguration;
 using Microsoft.Extensions.Logging;
 
-namespace Metetron.FileParser.FileTasks
+namespace Parsnet.FileTasks
 {
     public class FileChecker : IFileChecker
     {

@@ -1,11 +1,11 @@
 using System.IO.Abstractions;
 using System.Text.RegularExpressions;
 using AutoMapper;
-using Metetron.FileParser.FileTasks;
-using Metetron.FileParser.Options;
-using Metetron.FileParser.WatcherConfiguration;
+using Parsnet.FileTasks;
+using Parsnet.Options;
+using Parsnet.WatcherConfiguration;
 
-namespace Metetron.FileParser
+namespace Parsnet
 {
     public class FileWatcherProfile : Profile
     {

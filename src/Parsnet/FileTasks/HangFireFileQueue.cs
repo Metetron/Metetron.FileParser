@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using Hangfire;
-using Metetron.FileParser.Abstractions;
-using Metetron.FileParser.WatcherConfiguration;
+using Parsnet.Abstractions;
+using Parsnet.WatcherConfiguration;
 using Microsoft.Extensions.Logging;
 
-namespace Metetron.FileParser.FileTasks
+namespace Parsnet.FileTasks
 {
     public class HangFireFileQueue : IFileQueue
     {

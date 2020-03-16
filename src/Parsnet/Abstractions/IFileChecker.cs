@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Threading.Tasks;
-using Metetron.FileParser.Options;
-using Metetron.FileParser.WatcherConfiguration;
+using Parsnet.Options;
+using Parsnet.WatcherConfiguration;
 
-namespace Metetron.FileParser.Abstractions
+namespace Parsnet.Abstractions
 {
     public interface IFileChecker
     {

@@ -1,7 +1,7 @@
 using System.IO.Abstractions;
 using System.Text.RegularExpressions;
 
-namespace Metetron.FileParser.Options
+namespace Parsnet.Options
 {
     public class FileCheckOptions
     {

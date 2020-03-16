@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Metetron.FileParser.Abstractions
+namespace Parsnet.Abstractions
 {
     public interface IParser
     {

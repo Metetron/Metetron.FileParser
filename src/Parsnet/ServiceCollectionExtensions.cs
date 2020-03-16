@@ -1,9 +1,9 @@
-using Metetron.FileParser.Abstractions;
-using Metetron.FileParser.FileCreatedWatcher;
-using Metetron.FileParser.FileTasks;
+using Parsnet.Abstractions;
+using Parsnet.FileCreatedWatcher;
+using Parsnet.FileTasks;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Metetron.FileParser
+namespace Parsnet
 {
     public static class ServiceCollectionExtensions
     {

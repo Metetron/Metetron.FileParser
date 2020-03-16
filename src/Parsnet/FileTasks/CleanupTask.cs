@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace Metetron.FileParser.FileTasks
+namespace Parsnet.FileTasks
 {
     public class CleanupTask
     {
