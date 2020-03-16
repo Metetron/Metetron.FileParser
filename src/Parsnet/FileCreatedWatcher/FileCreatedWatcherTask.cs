@@ -1,29 +1,28 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
-using Hangfire;
 using Parsnet.Abstractions;
-using Parsnet.FileTasks;
 using Parsnet.Options;
 using Parsnet.WatcherConfiguration;
 using Microsoft.Extensions.Logging;
 
 namespace Parsnet.FileCreatedWatcher
 {
-    public class FileCreatedWatcherTask<T> where T : IParser, new()
+    public class FileCreatedWatcherTask<T> : IFileWatcher where T : IParser, new()
     {
         private readonly ILogger<FileCreatedWatcherTask<T>> _logger;
         private readonly IWatcherDataRepository _watcherRepository;
-        private WatcherOptions _options;
         private readonly IFileChecker _fileChecker;
         private readonly IMapper _mapper;
         private readonly IFileQueue _fileWorker;
+        private readonly CancellationTokenSource _tokenSource;
+        private bool _isWatcherRunning = false;
+
+        public WatcherOptions Options { get; private set; }
 
         public FileCreatedWatcherTask(ILogger<FileCreatedWatcherTask<T>> logger, IWatcherDataRepository watcherRepository, IFileChecker fileChecker, IMapper mapper, IFileQueue fileWorker)
         {
@@ -32,20 +31,21 @@ namespace Parsnet.FileCreatedWatcher
             _fileChecker = fileChecker;
             _mapper = mapper;
             _fileWorker = fileWorker;
+            _tokenSource = new CancellationTokenSource();
         }
 
         /// <summary>
         /// Check the directories for new files
         /// </summary>
         /// <returns>A list of new files, that have not been parsed yet</returns>
-        private async Task<IEnumerable<IFileInfo>> CheckForNewFiles()
+        private async Task<IEnumerable<IFileInfo>> CheckForNewFilesAsync()
         {
-            _logger.LogInformation("{ParserName}: Checking whether there are new files or not...", _options.ParserName);
+            _logger.LogInformation("{ParserName}: Checking whether there are new files or not...", Options.ParserName);
 
             var parserData = await GetWatcherDataAsync();
-            _logger.LogDebug("{ParserName}: Got parser data from database...", _options.ParserName);
+            _logger.LogDebug("{ParserName}: Got parser data from database...", Options.ParserName);
 
-            var checkOptions = _mapper.Map<FileCheckOptions>(_options);
+            var checkOptions = _mapper.Map<FileCheckOptions>(Options);
             checkOptions.LastCreationTimeInTicks = parserData.LastFileCreationInTicks;
             var newFiles = _fileChecker.GetNewlyCreatedFiles(checkOptions);
 
@@ -64,13 +64,13 @@ namespace Parsnet.FileCreatedWatcher
         /// <returns>The watcher data</returns>
         private async Task<WatcherData> GetWatcherDataAsync()
         {
-            var parserData = await _watcherRepository.GetWatcherDataAsync(_options.ParserName);
+            var parserData = await _watcherRepository.GetWatcherDataAsync(Options.ParserName);
 
             if (parserData != null)
                 return parserData;
 
-            _logger.LogDebug("{ParserName}: Data not found in database. Create it from scratch...", _options.ParserName);
-            parserData = new WatcherData { ParserName = _options.ParserName, LastFileCreationInTicks = DateTime.MinValue.Ticks };
+            _logger.LogDebug("{ParserName}: Data not found in database. Create it from scratch...", Options.ParserName);
+            parserData = new WatcherData { ParserName = Options.ParserName, LastFileCreationInTicks = DateTime.MinValue.Ticks };
 
             await _watcherRepository.InsertWatcherDataAsync(parserData);
 
@@ -89,23 +89,23 @@ namespace Parsnet.FileCreatedWatcher
                 {
                     try
                     {
-                        var files = await CheckForNewFiles();
+                        var files = await CheckForNewFilesAsync();
 
                         if (files.Any())
                         {
-                            _fileWorker.EnqueueNewFilesForProcessing<T>(_options, files.ToList());
+                            _fileWorker.EnqueueNewFilesForProcessing<T>(Options, files.ToList());
                         }
                         else
                         {
-                            _logger.LogInformation("{ParserName}: Found no new files...", _options.ParserName);
+                            _logger.LogInformation("{ParserName}: Found no new files...", Options.ParserName);
                         }
 
                     }
                     catch (Exception exception)
                     {
-                        _logger.LogError(exception, "{ParserName}: Exception occurred while checking for new files", _options.ParserName);
+                        _logger.LogError(exception, "{ParserName}: Exception occurred while checking for new files", Options.ParserName);
                     }
-                    await Task.Delay(_options.PollingInterval);
+                    await Task.Delay(Options.PollingInterval);
                 }
             }, cancellationToken);
         }
@@ -113,12 +113,41 @@ namespace Parsnet.FileCreatedWatcher
         /// <summary>
         /// Used for starting the parser thread
         /// </summary>
-        /// <param name="cancellationToken">Token to cancel the operation</param>
-        public void Start(WatcherOptions options, CancellationToken cancellationToken)
+        public void Start()
         {
-            _options = options;
-            var task = new Task(() => ParserLoop(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning);
+            if (_isWatcherRunning)
+                throw new WatcherIsAlreadyRunningException();
+
+            if (Options == null)
+                throw new ArgumentNullException(nameof(Options), "Please set the watcher options before starting the watcher");
+
+            var task = new Task(() => ParserLoop(_tokenSource.Token), _tokenSource.Token, TaskCreationOptions.LongRunning);
             task.Start();
+            _isWatcherRunning = true;
+        }
+
+        /// <summary>
+        /// Stops the parser thread
+        /// </summary>
+        public void Stop()
+        {
+            if (!_isWatcherRunning)
+                throw new WatcherIsAlreadyStoppedException();
+
+            _tokenSource.Cancel();
+            _isWatcherRunning = false;
+        }
+
+        /// <summary>
+        /// Sets the options for the watcher
+        /// </summary>
+        /// <param name="options">The options</param>
+        public void SetOptions(WatcherOptions options)
+        {
+            if (_isWatcherRunning)
+                throw new WatcherIsAlreadyRunningException();
+
+            Options = options;
         }
     }
 }
