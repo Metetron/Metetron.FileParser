@@ -17,7 +17,7 @@
     <Copyright>Copyright (c) Daniel Freydl and contributors 2019-2020</Copyright>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Metetron/Parsnet</RepositoryUrl>
-  <PropertyGroup>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="9.0.0" />
