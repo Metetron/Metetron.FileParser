@@ -29,7 +29,6 @@ steps:
       command: "pack"
       packagesToPack: "**/Parsnet.csproj"
       versioningScheme: "off"
-      includeSymbols: true
       buildProperties: "PackageVersion=$(Build.BuildNumber)"
 
   - task: CopyFiles@2

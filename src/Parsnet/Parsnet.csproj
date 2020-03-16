@@ -6,6 +6,8 @@
 
   <PropertyGroup>
     <IsPackable>True</IsPackable>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageId>Parsnet</PackageId>
     <Title>Parsnet</Title>
     <Authors>Daniel Freydl</Authors>
