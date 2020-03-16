@@ -8,11 +8,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Metetron.FileParser.FileTasks
 {
-    public class FileWorker : IFileWorker
+    public class HangFireFileQueue : IFileQueue
     {
-        private readonly ILogger<FileWorker> _logger;
+        private readonly ILogger<HangFireFileQueue> _logger;
 
-        public FileWorker(ILogger<FileWorker> logger)
+        public HangFireFileQueue(ILogger<HangFireFileQueue> logger)
         {
             _logger = logger;
         }

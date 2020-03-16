@@ -2,6 +2,7 @@ using System.IO.Abstractions;
 using System.Text.RegularExpressions;
 using AutoMapper;
 using Metetron.FileParser.FileTasks;
+using Metetron.FileParser.Options;
 using Metetron.FileParser.WatcherConfiguration;
 
 namespace Metetron.FileParser

@@ -4,6 +4,8 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Metetron.FileParser.Abstractions;
+using Metetron.FileParser.Options;
 using Metetron.FileParser.WatcherConfiguration;
 using Microsoft.Extensions.Logging;
 

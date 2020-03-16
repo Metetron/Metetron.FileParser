@@ -10,6 +10,7 @@ using AutoMapper;
 using Hangfire;
 using Metetron.FileParser.Abstractions;
 using Metetron.FileParser.FileTasks;
+using Metetron.FileParser.Options;
 using Metetron.FileParser.WatcherConfiguration;
 using Microsoft.Extensions.Logging;
 
@@ -22,9 +23,9 @@ namespace Metetron.FileParser.FileCreatedWatcher
         private WatcherOptions _options;
         private readonly IFileChecker _fileChecker;
         private readonly IMapper _mapper;
-        private readonly IFileWorker _fileWorker;
+        private readonly IFileQueue _fileWorker;
 
-        public FileCreatedWatcherTask(ILogger<FileCreatedWatcherTask<T>> logger, IWatcherDataRepository watcherRepository, IFileChecker fileChecker, IMapper mapper, IFileWorker fileWorker)
+        public FileCreatedWatcherTask(ILogger<FileCreatedWatcherTask<T>> logger, IWatcherDataRepository watcherRepository, IFileChecker fileChecker, IMapper mapper, IFileQueue fileWorker)
         {
             _logger = logger;
             _watcherRepository = watcherRepository;
