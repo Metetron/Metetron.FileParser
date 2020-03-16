@@ -12,5 +12,14 @@ namespace Metetron.FileParser.FileTasks
         {
             File.Delete(filePath);
         }
+
+        /// <summary>
+        /// Delete a directory and all containing files and subdirectories
+        /// </summary>
+        /// <param name="folderPath">The path to the folder</param>
+        public static void DeleteFolder(string folderPath)
+        {
+            Directory.Delete(folderPath, true);
+        }
     }
 }
