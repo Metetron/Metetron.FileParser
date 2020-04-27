@@ -66,7 +66,7 @@ namespace Parsnet.FileTasks
         /// <returns>A list of new files that were found in the main directory</returns>
         private IEnumerable<IFileInfo> GetNewFilesFromMainDirectory(FileCheckOptions options)
         {
-            if (!options.CheckMainDirectory)
+            if (!options.CheckMainDirectory && options.SubDirectorySearchPattern != null)
                 return Array.Empty<IFileInfo>();
 
             return GetFilesFromDirectory(options, options.MainDirectory);
