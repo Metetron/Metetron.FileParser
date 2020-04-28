@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Parsnet.WatcherConfiguration
 {
@@ -24,7 +25,7 @@ namespace Parsnet.WatcherConfiguration
         public bool CheckMainDirectory { get; set; }
         /// <value>Whether the original file should be removed after parsing.</value>
         public bool DeleteSourceFileAfterParsing { get; set; }
-
+        /// <value>Contains error messages in the case of invalid options configuration</value>
         public IList<string> ErrorMessages { get; set; }
 
         internal bool AreOptionsValid()
