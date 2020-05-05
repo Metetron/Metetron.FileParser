@@ -39,5 +39,6 @@ msbuild.wrn
 # Visual Studio 2015
 .vs/
 
-# manual test project
-src/ConsoleTest/
+# sqlite dbs
+*.db
+*.db-journal

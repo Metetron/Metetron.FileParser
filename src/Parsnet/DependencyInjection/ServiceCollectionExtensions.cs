@@ -35,7 +35,7 @@ namespace Parsnet.DependencyInjection
 
         private static void CreateHangfireServer()
         {
-            GlobalConfiguration.Configuration.UseSQLiteStorage("Filename=Hangfire.db");
+            GlobalConfiguration.Configuration.UseSQLiteStorage("Hangfire.db");
             new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 10 });
         }
     }
