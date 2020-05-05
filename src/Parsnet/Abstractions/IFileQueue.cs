@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO.Abstractions;
-using Parsnet.Abstractions;
-using Parsnet.WatcherConfiguration;
+using Parsnet.Options;
 
 namespace Parsnet.Abstractions
 {

@@ -12,7 +12,7 @@ namespace Parsnet.FileTasks
         /// </summary>
         /// <param name="filePath">The path of the file to copy</param>
         /// <param name="directoryPath">The directory to copy the file to</param>
-        public static async Task CopyFileToDirectory(string filePath, string directoryPath)
+        public static async Task CopyFileToDirectoryAsync(string filePath, string directoryPath)
         {
             CreateDirectoryIfItDoesNotExist(directoryPath);
 
