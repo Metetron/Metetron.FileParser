@@ -14,7 +14,8 @@ namespace Parsnet.Persistence.Configurations
 
             builder.Property(wt => wt.LastWriteTimeUtc)
                 .IsRequired()
-                .HasDefaultValue(DateTime.MinValue.ToUniversalTime().Ticks);
+                .HasDefaultValue(DateTime.MinValue.ToUniversalTime().Ticks)
+                .ValueGeneratedNever();
         }
     }
 }

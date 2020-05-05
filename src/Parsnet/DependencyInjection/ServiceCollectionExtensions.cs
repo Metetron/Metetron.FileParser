@@ -8,6 +8,8 @@ using Parsnet.ParserWorker;
 using Parsnet.FileTasks;
 using Parsnet.FileWatchers.CreationTimeWatcher;
 using Parsnet.FileWatchers.WriteTimeWatcher;
+using Parsnet.Persistence;
+using Hangfire.Storage.SQLite;
 
 namespace Parsnet.DependencyInjection
 {
@@ -21,7 +23,21 @@ namespace Parsnet.DependencyInjection
 
             services.AddWriteTimeWatchers();
             services.AddCreationTimeWatchers();
+            services.EnsureDatabaseIsCreated();
 
+            CreateHangfireServer();
+        }
+
+        private static void EnsureDatabaseIsCreated(this IServiceCollection services)
+        {
+            var provider = services.BuildServiceProvider();
+            var context = provider.GetRequiredService<WatcherContext>();
+            context.Database.EnsureCreated();
+        }
+
+        private static void CreateHangfireServer()
+        {
+            GlobalConfiguration.Configuration.UseSQLiteStorage("Filename=Hangfire.db");
             new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 10 });
         }
     }
