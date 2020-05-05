@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Parsnet.WatcherConfiguration
+namespace Parsnet.Options
 {
     public class WatcherOptions
     {

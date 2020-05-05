@@ -5,10 +5,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Parsnet.Abstractions;
-using Parsnet.FileCreatedWatcher;
-using Parsnet.WatcherConfiguration;
+using Parsnet.FileWatchers.CreationTimeWatcher;
+using Parsnet.FileWatchers.WriteTimeWatcher;
+using Parsnet.Options;
 
-namespace Parsnet.ParserWorker
+namespace Parsnet.WorkerService
 {
     public class ParserWorker
     {
@@ -27,12 +28,25 @@ namespace Parsnet.ParserWorker
             _registrations = new Dictionary<Guid, IFileWatcher>();
         }
 
-        public Guid RegisterFileCreationParser<T>(WatcherOptions watcherOptions) where T : IParser, new()
+        public Guid RegisterCreationTimeParser<T>(WatcherOptions watcherOptions) where T : IParser, new()
         {
             CheckOptions(watcherOptions);
 
             var guid = new Guid();
-            var watcherTask = _serviceProvider.GetRequiredService<FileCreatedWatcherTask<T>>();
+            var watcherTask = _serviceProvider.GetRequiredService<CreationTimeWatcherTask<T>>();
+            watcherTask.SetOptions(watcherOptions);
+
+            _registrations.Add(guid, watcherTask);
+
+            return guid;
+        }
+
+        public Guid RegisterWriteTimeParser<T>(WatcherOptions watcherOptions) where T : IParser, new()
+        {
+            CheckOptions(watcherOptions);
+
+            var guid = new Guid();
+            var watcherTask = _serviceProvider.GetRequiredService<WriteTimeWatcherTask<T>>();
             watcherTask.SetOptions(watcherOptions);
 
             _registrations.Add(guid, watcherTask);

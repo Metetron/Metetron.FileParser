@@ -1,4 +1,4 @@
-using Parsnet.WatcherConfiguration;
+using Parsnet.Options;
 
 namespace Parsnet.Abstractions
 {

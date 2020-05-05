@@ -1,6 +1,6 @@
 using System;
 
-namespace Parsnet.ParserWorker
+namespace Parsnet.WorkerService
 {
     public class WorkerAlreadyStartedException : Exception
     {

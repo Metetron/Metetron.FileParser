@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Parsnet.WatcherConfiguration
+namespace Parsnet.Options
 {
     internal class WatcherOptionsValidator : AbstractValidator<WatcherOptions>
     {

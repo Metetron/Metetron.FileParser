@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Parsnet.Abstractions;
 using Parsnet.FileWatchers.CreationTimeWatcher.Data;
-using Parsnet.WatcherConfiguration;
+using Parsnet.Options;
 
 namespace Parsnet.FileWatchers.CreationTimeWatcher
 {

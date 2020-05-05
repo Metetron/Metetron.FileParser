@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO.Abstractions;
 using Hangfire;
 using Parsnet.Abstractions;
-using Parsnet.WatcherConfiguration;
+using Parsnet.Options;
 using Microsoft.Extensions.Logging;
 
 namespace Parsnet.FileTasks
@@ -25,9 +25,9 @@ namespace Parsnet.FileTasks
                 var workingFile = $"{workingPath}\\{file.Name}";
                 var backupPath = $"{options.BackupDirectoryPath}\\{DateTime.Today:yyyy}\\{DateTime.Today:MMMM}";
 
-                var copyJobId = BackgroundJob.Enqueue(() => CopyTask.CopyFileToDirectory(file.FullName, workingPath));
+                var copyJobId = BackgroundJob.Enqueue(() => CopyTask.CopyFileToDirectoryAsync(file.FullName, workingPath));
                 var parserJobId = BackgroundJob.ContinueJobWith(copyJobId, () => new T().ParseFile(workingFile));
-                var backupJobId = BackgroundJob.ContinueJobWith(parserJobId, () => CopyTask.CopyFileToDirectory(workingFile, backupPath));
+                var backupJobId = BackgroundJob.ContinueJobWith(parserJobId, () => CopyTask.CopyFileToDirectoryAsync(workingFile, backupPath));
                 var cleanupJobId = BackgroundJob.ContinueJobWith(backupJobId, () => CleanupTask.DeleteFolder(workingPath));
 
                 if (options.DeleteSourceFileAfterParsing)

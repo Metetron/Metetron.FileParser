@@ -1,5 +1,5 @@
 using System;
-using Parsnet.WatcherConfiguration;
+using Parsnet.Options;
 
 namespace Parsnet.FileWatchers.Exceptions
 {

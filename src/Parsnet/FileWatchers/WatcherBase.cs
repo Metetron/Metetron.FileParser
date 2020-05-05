@@ -1,6 +1,6 @@
 using System.Threading;
 using Parsnet.FileWatchers.Exceptions;
-using Parsnet.WatcherConfiguration;
+using Parsnet.Options;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Parsnet.FileWatchers
 {
-    public abstract class WatcherBase<T> where T : IParser, new()
+    public abstract class WatcherBase<T> : IFileWatcher where T : IParser, new()
     {
         public WatcherOptions Options { get; private set; }
         public bool IsRunning { get; private set; }
