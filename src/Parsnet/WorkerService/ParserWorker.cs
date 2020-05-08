@@ -32,7 +32,7 @@ namespace Parsnet.WorkerService
         {
             CheckOptions(watcherOptions);
 
-            var guid = new Guid();
+            var guid = Guid.NewGuid();
             var watcherTask = _serviceProvider.GetRequiredService<CreationTimeWatcherTask<T>>();
             watcherTask.SetOptions(watcherOptions);
 
@@ -45,7 +45,7 @@ namespace Parsnet.WorkerService
         {
             CheckOptions(watcherOptions);
 
-            var guid = new Guid();
+            var guid = Guid.NewGuid();
             var watcherTask = _serviceProvider.GetRequiredService<WriteTimeWatcherTask<T>>();
             watcherTask.SetOptions(watcherOptions);
 
