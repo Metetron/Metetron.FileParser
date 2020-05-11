@@ -26,15 +26,26 @@ namespace CreationTimeWatcherExample
                 PollingInterval = 5000,
                 DeleteSourceFileAfterParsing = false
             };
+            var options2 = new WatcherOptions()
+            {
+                DirectoryToWatch = "D:\\ParserTest",
+                FileSearchPattern = "hello2*.cs",
+                WorkingDirectoryPath = "D:\\WorkingDir",
+                BackupDirectoryPath = "D:\\BackupDir",
+                ParserName = "Parser_One",
+                PollingInterval = 5000,
+                DeleteSourceFileAfterParsing = false
+            };
 
             var worker = provider.GetRequiredService<ParserWorker>();
 
             var parserId = worker.RegisterCreationTimeParser<Logic>(options);
-            worker.StartParser(parserId);
+            var parserId2 = worker.RegisterCreationTimeParser<Logic>(options2);
+            worker.StartAllParsers();
 
             await Task.Delay(60000);
 
-            worker.StopParser(parserId);
+            worker.StopAllParsers();
         }
     }
 }

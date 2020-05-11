@@ -13,7 +13,7 @@ namespace Parsnet.DependencyInjection
             services.AddSingleton(loggerFactory);
             services.AddLogging();
 
-            services.AddDbContext<WatcherContext>(options => options.UseSqlite("Filename=WatcherDatabase.db"));
+            services.AddDbContext<WatcherContext>(options => options.UseSqlite("Filename=WatcherDatabase.db"), ServiceLifetime.Transient);
             services.AddParsnet();
 
             return services;
